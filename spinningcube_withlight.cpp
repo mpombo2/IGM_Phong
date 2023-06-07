@@ -244,6 +244,8 @@ int main() {
   // Unbind vao
   glBindVertexArray(0);
 
+  /* Localizadores das variables do shader (model, projection, etc) que se usan despois
+    para darlle un valor a ditas variables */
   // Uniforms
   // - Model matrix
   // - View matrix
@@ -253,8 +255,6 @@ int main() {
   // - Light data
   // - Material data
 
-  /* Localizadores das variables do shader (model, projection, etc) que se usan despois
-    para darlle un valor a ditas variables */
   model_location = glGetUniformLocation(shader_program, "model");
   view_location = glGetUniformLocation(shader_program, "view");
   proj_location = glGetUniformLocation(shader_program, "projection");
@@ -293,52 +293,41 @@ void render(double currentTime) {
 
   glm::mat4 model_matrix, view_matrix, proj_matrix;
 
-  //model_matrix = glm::mat4(1.f);
+  model_matrix = glm::mat4(1.f);
+
   view_matrix = glm::lookAt(                 camera_pos,  // pos
                             glm::vec3(0.0f, 0.0f, 0.0f),  // target
                             glm::vec3(0.0f, 1.0f, 0.0f)); // up
 
+  //Establecemos o valor para view_matrix no shader usando o seu localizador
+  glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
+
   // Moving cube
   // model_matrix = glm::rotate(model_matrix,
-  //   [...]
-  
 
-  /*  DESPLAZAMIENTO HACIA ATRÁS EN EL EJE Z */
-  //Creamos una matriz de traslación usando la matriz identidad (mat4(1.f)) y
-  //un vector de desplazamiento vec3(0.0f, 0.0f, -4.0f)
-  model_matrix = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -4.0f));
-  //Añade otra matriz de traslación que varía el desplazamiento con el tiempo
-  model_matrix = glm::translate(model_matrix,
-                             glm::vec3(sinf(2.1f * f) * 0.5f,
-                                       cosf(1.7f * f) * 0.5f,
-                                       sinf(1.3f * f) * cosf(1.5f * f) * 2.0f));
-
-  /*  ROTACIÓN  */
-  // Matriz de rotación que gira en torno al eje "y" (0.0f, 1.0f, 0.0f) 
-  // y el ángulo de rotación se calcula en función al tiempo actual
+  // Matriz de rotación que xira en torno ao eixe "y" (0.0f, 1.0f, 0.0f) 
+  // O ángulo de rotación calculase en función do tempo actual
   model_matrix = glm::rotate(model_matrix,
                           glm::radians((float)currentTime * 45.0f),
                           glm::vec3(0.0f, 1.0f, 0.0f));
                           
-  // Matriz de rotación que gira en torno al eje "x" (1.0f, 0.0f, 0.0f) 
-  // y el ángulo de rotación se calcula en función al tiempo actual
+  // Matriz de rotación que xira en torno ao eixe "x" (1.0f, 0.0f, 0.0f)  
+  // O ángulo de rotación calculase en función do tempo actual
   model_matrix = glm::rotate(model_matrix,
                           glm::radians((float)currentTime * 81.0f),
                           glm::vec3(1.0f, 0.0f, 0.0f));
 
-
-  //Establecemos el valor para model_matrix en el shader usando su localizador
+  //Establecemos o valor para model_matrix no shader usando o seu localizador
   glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
 
 
   // Projection
   // proj_matrix = glm::perspective(glm::radians(50.0f),
-  //   [...]
   proj_matrix = glm::perspective(glm::radians(50.0f),
                                  (float) gl_width / (float) gl_height,
                                  0.1f, 1000.0f);
 
-  //Establecemos el valor para proj_matrix en el shader usando su localizador
+  //Establecemos o valor para proj_matrix no shader usando o seu localizador
   glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
 
   // Normal matrix: normal vectors to world coordinates
