@@ -24,6 +24,10 @@ void render(double);
 GLuint shader_program = 0; // shader program to set render pipeline
 GLuint vao = 0; // Vertext Array Object to set input data
 GLint model_location, view_location, proj_location; // Uniforms for transformation matrices
+GLint normal_location, camera_location;
+GLint light_pos_location, light_amb_location, light_diff_location, light_spec_location;
+GLint material_amb_location, material_diff_location, material_spec_location, material_shin_location;
+
 
 // Shader names
 const char *vertexFileName = "spinningcube_withlight_vs.glsl";
@@ -228,21 +232,55 @@ int main() {
   // Vertex attributes
   // 0: vertex position (x, y, z)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-  // 0: número de vertex attribute en VS (location)
-  // 3, GL_FLOAT: 3 x GL_FLOAT por vértice
-  // GL_FALSE: non queremos que se normalicen estes valores
-  // 0: stride entre elementos
-  // NULL ((void*)0): offset de comezo no VBO
-
   glEnableVertexAttribArray(0); // Activar atributo, mapeando con IN var en VS 
 
   // 1: vertex normals (x, y, z)
+  GLfloat vertex_normals[sizeof(float)* sizeof(vertex_positions)];
+
+  for(int i = 0; i < sizeof(vertex_positions); i+= 9) {
+
+    //Tres vértices de un triángulo (A, B, C)
+    GLfloat A[] = {vertex_positions[i], vertex_positions[i+1], vertex_positions[i+2]};
+    GLfloat B[] = {vertex_positions[i+3], vertex_positions[i+4], vertex_positions[i+5]};
+    GLfloat C[] = {vertex_positions[i+6], vertex_positions[i+7], vertex_positions[i+8]};
+
+    //Vector del vértice A al B y del A al C
+    GLfloat AB[] = {B[0] - A[0], B[1] - A[1], B[2] - A[2]};     // B.x - A.x, B.y - A.y, B.z - A.z
+    GLfloat AC[] = {C[0] - A[0], C[1] - A[1], C[2] - A[2]};     // C.x - A.x, C.y - A.y, C.z - A.z
+
+    //Producto cruz de AB y AC
+    GLfloat x = AB[1] * AC[2] - AB[2] * AC[1];     // AB.y * AC.z - AB.z * AC.y
+    GLfloat y = AB[2] * AC[0] - AB[0] * AC[2];     // AB.z * AC.x - AB.x * AC.z
+    GLfloat z = AB[0] * AC[1] - AB[1] * AC[0];     // AB.x * AC.y - AB.y * AC.x
+
+    vertex_normals[i] = x;
+    vertex_normals[i+1] = y;
+    vertex_normals[i+2] = z;
+
+    vertex_normals[i+3] = x;
+    vertex_normals[i+4] = y;
+    vertex_normals[i+5] = z;
+
+    vertex_normals[i+6] = x;
+    vertex_normals[i+7] = y;
+    vertex_normals[i+8] = z;
+  }
+
+  GLuint normals_buffer = 0;
+  glGenBuffers(1, &normals_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, normals_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_normals), vertex_normals, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  glEnableVertexAttribArray(1); 
 
   // Unbind vbo (it was conveniently registered by VertexAttribPointer)
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 1);
 
   // Unbind vao
   glBindVertexArray(0);
+  glBindVertexArray(1);
 
   /* Localizadores das variables do shader (model, projection, etc) que se usan despois
     para darlle un valor a ditas variables */
@@ -258,6 +296,19 @@ int main() {
   model_location = glGetUniformLocation(shader_program, "model");
   view_location = glGetUniformLocation(shader_program, "view");
   proj_location = glGetUniformLocation(shader_program, "projection");
+  normal_location = glGetUniformLocation(shader_program, "normal_to_world");
+  camera_location = glGetUniformLocation(shader_program, "view_pos");
+
+  light_pos_location = glGetUniformLocation(shader_program, "light.position");
+  light_amb_location = glGetUniformLocation(shader_program, "light.ambient");
+  light_diff_location = glGetUniformLocation(shader_program, "light.diffuse");
+  light_spec_location = glGetUniformLocation(shader_program, "light.specular");
+
+  material_amb_location = glGetUniformLocation(shader_program, "material.ambient");
+  material_diff_location = glGetUniformLocation(shader_program, "material.diffuse");
+  material_spec_location = glGetUniformLocation(shader_program, "material.specular");
+  material_shin_location = glGetUniformLocation(shader_program, "material.shininess");
+  
 
   /*
    * Bucle de render para manter a ventana aberta
@@ -292,14 +343,14 @@ void render(double currentTime) {
   glBindVertexArray(vao);
 
   glm::mat4 model_matrix, view_matrix, proj_matrix;
+  glm::mat3 normal_matrix;
 
   model_matrix = glm::mat4(1.f);
-
   view_matrix = glm::lookAt(                 camera_pos,  // pos
                             glm::vec3(0.0f, 0.0f, 0.0f),  // target
                             glm::vec3(0.0f, 1.0f, 0.0f)); // up
 
-  //Establecemos o valor para view_matrix no shader usando o seu localizador
+  //Establecemos o valor para a uniform "view" no shader usando o seu localizador
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
   // Moving cube
@@ -317,7 +368,7 @@ void render(double currentTime) {
                           glm::radians((float)currentTime * 81.0f),
                           glm::vec3(1.0f, 0.0f, 0.0f));
 
-  //Establecemos o valor para model_matrix no shader usando o seu localizador
+  //Establecemos o valor para a uniform "model" no shader usando o seu localizador
   glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
 
 
@@ -327,10 +378,34 @@ void render(double currentTime) {
                                  (float) gl_width / (float) gl_height,
                                  0.1f, 1000.0f);
 
-  //Establecemos o valor para proj_matrix no shader usando o seu localizador
+  //Establecemos o valor para a uniform "projection" no shader usando o seu localizador
   glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
 
+
+
   // Normal matrix: normal vectors to world coordinates
+  //normal_matrix = glm::inverseTranspose(glm::mat3(model_matrix));
+  normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_matrix)));
+
+  //Establecemos o valor para a uniform "normal_to_world" no shader usando o seu localizador
+  glUniformMatrix3fv(normal_location, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+
+
+  //Establecemos o valor para a uniform "camera_pos" no shader usando o seu localizador
+  glUniform3fv(camera_location, 1, glm::value_ptr(camera_pos));
+
+  //Establecemos o valor para cada atributo da uniform "light" no shader usando o localizador correspondente
+  glUniform3fv(light_pos_location, 1, glm::value_ptr(light_pos));
+  glUniform3fv(light_amb_location, 1, glm::value_ptr(light_ambient));
+  glUniform3fv(light_diff_location, 1, glm::value_ptr(light_diffuse));
+  glUniform3fv(light_spec_location, 1, glm::value_ptr(light_specular));
+
+  //Establecemos o valor para cada atributo da uniform "material" no shader usando o localizador correspondente
+  glUniform3fv(material_amb_location, 1, glm::value_ptr(material_ambient));
+  glUniform3fv(material_diff_location, 1, glm::value_ptr(material_diffuse));
+  glUniform3fv(material_spec_location, 1, glm::value_ptr(material_specular));
+  glUniform1f(material_shin_location, material_shininess);  
 
   glDrawArrays(GL_TRIANGLES, 0, 36);
 }
