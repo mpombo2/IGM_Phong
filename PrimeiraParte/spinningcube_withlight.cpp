@@ -239,16 +239,16 @@ int main() {
 
   for(int i = 0; i < sizeof(vertex_positions); i+= 9) {
 
-    //Tres vértices de un triángulo (A, B, C)
+    //Tres vértices dun triángulo (A, B, C)
     GLfloat A[] = {vertex_positions[i], vertex_positions[i+1], vertex_positions[i+2]};
     GLfloat B[] = {vertex_positions[i+3], vertex_positions[i+4], vertex_positions[i+5]};
     GLfloat C[] = {vertex_positions[i+6], vertex_positions[i+7], vertex_positions[i+8]};
 
-    //Vector del vértice A al B y del A al C
+    //Vector do vértice A ao B e do A ao C
     GLfloat AB[] = {B[0] - A[0], B[1] - A[1], B[2] - A[2]};     // B.x - A.x, B.y - A.y, B.z - A.z
     GLfloat AC[] = {C[0] - A[0], C[1] - A[1], C[2] - A[2]};     // C.x - A.x, C.y - A.y, C.z - A.z
 
-    //Producto cruz de AB y AC
+    //Producto cruz de AB e AC
     GLfloat x = AB[1] * AC[2] - AB[2] * AC[1];     // AB.y * AC.z - AB.z * AC.y
     GLfloat y = AB[2] * AC[0] - AB[0] * AC[2];     // AB.z * AC.x - AB.x * AC.z
     GLfloat z = AB[0] * AC[1] - AB[1] * AC[0];     // AB.x * AC.y - AB.y * AC.x
