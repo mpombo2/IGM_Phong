@@ -235,9 +235,9 @@ int main() {
   glEnableVertexAttribArray(0); // Activar atributo, mapeando con IN var en VS 
 
   // 1: vertex normals (x, y, z)
-  GLfloat vertex_normals[sizeof(float)* sizeof(vertex_positions)];
+  GLfloat vertex_normals[sizeof(float)* (36*3)];    //36 vertices * 3 coordenadas cada uno
 
-  for(int i = 0; i < sizeof(vertex_positions); i+= 9) {
+  for (int i = 0; i < (36*3); i+= 9) {
 
     //Tres vértices dun triángulo (A, B, C)
     GLfloat A[] = {vertex_positions[i], vertex_positions[i+1], vertex_positions[i+2]};
@@ -264,6 +264,21 @@ int main() {
     vertex_normals[i+6] = x;
     vertex_normals[i+7] = y;
     vertex_normals[i+8] = z;
+    
+
+    printf("[%f, ", vertex_positions[i]);
+    printf("%f, ", vertex_positions[i + 1]);
+    printf("%f] \n", vertex_positions[i + 2]);
+
+    printf("[%f, ", vertex_positions[i+3]);
+    printf("%f, ", vertex_positions[i + 4]);
+    printf("%f] \n", vertex_positions[i + 5]);
+
+    printf("[%f, ", vertex_positions[i+6]);
+    printf("%f, ", vertex_positions[i + 7]);
+    printf("%f] \n", vertex_positions[i + 8]);
+
+    printf("\n \n");
   }
 
   GLuint normals_buffer = 0;
