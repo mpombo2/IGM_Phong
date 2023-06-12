@@ -264,21 +264,6 @@ int main() {
     vertex_normals[i+6] = x;
     vertex_normals[i+7] = y;
     vertex_normals[i+8] = z;
-    
-
-    printf("[%f, ", vertex_positions[i]);
-    printf("%f, ", vertex_positions[i + 1]);
-    printf("%f] \n", vertex_positions[i + 2]);
-
-    printf("[%f, ", vertex_positions[i+3]);
-    printf("%f, ", vertex_positions[i + 4]);
-    printf("%f] \n", vertex_positions[i + 5]);
-
-    printf("[%f, ", vertex_positions[i+6]);
-    printf("%f, ", vertex_positions[i + 7]);
-    printf("%f] \n", vertex_positions[i + 8]);
-
-    printf("\n \n");
   }
 
   GLuint normals_buffer = 0;
